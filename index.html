@@ -1,1 +1,392 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Quseyn Simulator NEON</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<style>
+/* ==== ГЛАВНАЯ ТЕМА ==== */
+body { 
+    margin:0;
+    background:#06060d;
+    color:white;
+    font-family:Arial;
+    overflow-x:hidden;
+}
+
+/* ==== НЕОНОВЫЙ ТЕКСТ ==== */
+.neon {
+    color:#8a2be2;
+    text-shadow:0 0 10px #8a2be2, 0 0 20px #8a2be2;
+}
+
+/* ==== ЗАГОЛОВОК ==== */
+header {
+    text-align:center;
+    font-size:26px;
+    padding:15px;
+    background:#0a0a17;
+    border-bottom:2px solid #8a2be2;
+    color:#8a2be2;
+    text-shadow:0 0 10px #8a2be2;
+}
+
+/* ==== БАЛАНС ==== */
+#moneyBox {
+    text-align:center;
+    margin:15px 0;
+    font-size:22px;
+    color:#8a2be2;
+    text-shadow:0 0 8px #8a2be2;
+}
+
+/* ==== КАРТОЧКИ ==== */
+.card {
+    background:rgba(20,20,40,0.85);
+    border:1px solid rgba(138,43,226,0.4);
+    border-radius:14px;
+    margin:12px;
+    padding:15px;
+    box-shadow:0 0 12px rgba(138,43,226,0.4);
+}
+
+/* ==== КНОПКА ==== */
+.btn {
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    background:#8a2be2;
+    border:none;
+    border-radius:10px;
+    font-size:16px;
+    color:white;
+    box-shadow:0 0 8px #8a2be2;
+}
+
+/* ==== ЛИСТ ЭЛЕМЕНТОВ ==== */
+.item {
+    background:#101020;
+    margin:10px 0;
+    padding:12px;
+    border-radius:10px;
+    border:1px solid #472b74;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+/* ==== КАРТИНКИ ==== */
+.item img {
+    width:110px;
+    height:70px;
+    object-fit:cover;
+    border-radius:10px;
+    box-shadow:0 0 10px #8a2be2;
+}
+
+/* ==== SPLASH ==== */
+#splash {
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:black;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    z-index:9999;
+}
+#splash h1 {
+    color:#8a2be2;
+    font-size:32px;
+    text-shadow:0 0 20px #8a2be2;
+}
+.fadeOut {
+    animation:fadeOut 1s forwards;
+}
+@keyframes fadeOut {
+    to { opacity:0; visibility:hidden; }
+}
+
+/* ==== НАВИГАЦИЯ ==== */
+.navbar {
+    position:fixed;
+    bottom:0; left:0;
+    width:100%;
+    background:#0a0a17;
+    border-top:2px solid #8a2be2;
+    display:flex;
+}
+.navbar button {
+    flex:1;
+    padding:10px;
+    background:none;
+    border:none;
+    color:white;
+    font-size:15px;
+}
+.active {
+    color:#8a2be2;
+    text-shadow:0 0 10px #8a2be2;
+}
+</style>
+
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+    <h1>⚡ QUSEYN INDUSTRIES ⚡</h1>
+    <p class="neon">NEON EDITION</p>
+</div>
+
+<script>
+setTimeout(()=>{ 
+    document.getElementById("splash").classList.add("fadeOut");
+},1500);
+</script>
+
+<header>Quseyn Simulator • Neon</header>
+
+<div id="moneyBox">
+    Баланс: <span id="money">0</span>$
+</div>
+
+<!-- === ЭКРАНЫ === -->
+<div id="screen-business" class="card">
+    <h2 class="neon">Бизнесы</h2>
+    <div id="businessList"></div>
+</div>
+
+<div id="screen-cars" class="card" style="display:none;">
+    <h2 class="neon">Машины</h2>
+    <div id="carList"></div>
+</div>
+
+<div id="screen-houses" class="card" style="display:none;">
+    <h2 class="neon">Дома</h2>
+    <div id="houseList"></div>
+</div>
+
+<div id="screen-vip" class="card" style="display:none;">
+    <h2 class="neon">VIP</h2>
+    <p>VIP даёт:</p>
+    <ul>
+        <li>+20% доход</li>
+        <li>Уникальный бизнес</li>
+        <li>Голд интерфейс</li>
+    </ul>
+    <button class="btn" onclick="buyVIP()">Купить VIP (500000$)</button>
+</div>
+
+<!-- === НАВИГАЦИЯ === -->
+<div class="navbar">
+    <button onclick="show('business')" class="active">Бизнес</button>
+    <button onclick="show('cars')">Машины</button>
+    <button onclick="show('houses')">Дома</button>
+    <button onclick="show('vip')">VIP</button>
+</div>
+
+<script>
+/* =============== ПРОГРЕСС (СОХРАНЕНИЕ) ================= */
+let money = Number(localStorage.getItem("money")) || 100;
+let income = Number(localStorage.getItem("income")) || 0;
+let vip = localStorage.getItem("vip")==="1";
+
+let carsOwned = JSON.parse(localStorage.getItem("carsOwned")||"[]");
+let housesOwned = JSON.parse(localStorage.getItem("housesOwned")||"[]");
+let bizOwned = JSON.parse(localStorage.getItem("bizOwned")||"[]");
+
+function save(){
+    localStorage.setItem("money",money);
+    localStorage.setItem("income",income);
+    localStorage.setItem("vip",vip?"1":"0");
+    localStorage.setItem("carsOwned",JSON.stringify(carsOwned));
+    localStorage.setItem("housesOwned",JSON.stringify(housesOwned));
+    localStorage.setItem("bizOwned",JSON.stringify(bizOwned));
+}
+
+/* =============== СПИСОК КАРТИНОК (BASE64) =============== */
+const img_bmw = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...";
+const img_mercedes = img_bmw;
+const img_supra = img_bmw;
+const img_bugatti = img_bmw;
+
+const img_flat = img_bmw;
+const img_lux = img_bmw;
+const img_villa = img_bmw;
+const img_mansion = img_bmw;
+
+/* =============== СПИСКИ ================= */
+let businesses = [
+    {name:"Ларёк", price:100, income:2},
+    {name:"Шаурма", price:500, income:8},
+    {name:"Магазин", price:2000, income:30},
+    {name:"АЗС", price:8000, income:70},
+    {name:"IT Компания", price:50000, income:900},
+    {name:"Quseyn Industries", price:999999, income:20000}
+];
+
+let cars = [
+    {name:"BMW M5 F90", price:50000, img:img_bmw},
+    {name:"Mercedes S-Class", price:90000, img:img_mercedes},
+    {name:"Toyota Supra", price:120000, img:img_supra},
+    {name:"Bugatti Chiron", price:3000000, img:img_bugatti}
+];
+
+let houses = [
+    {name:"Квартира", price:30000, img:img_flat},
+    {name:"Люкс квартира", price:100000, img:img_lux},
+    {name:"Вилла", price:600000, img:img_villa},
+    {name:"Особняк", price:3000000, img:img_mansion}
+];
+
+/* =============== ОБНОВЛЕНИЕ ДЕНЕГ ================= */
+function updateMoney(){
+    document.getElementById("money").innerText = money;
+}
+
+/* =============== БИЗНЕС ================= */
+function renderBusinesses(){
+    let box = document.getElementById("businessList");
+    box.innerHTML = "";
+    businesses.forEach((b,i)=>{
+        box.innerHTML += `
+        <div class='item'>
+            <div>
+                <b>${b.name}</b><br>
+                Цена: ${b.price}$<br>
+                Доход: +${b.income}$/c
+                <button class="btn" onclick="buyBiz(${i})">Купить</button>
+            </div>
+        </div>`;
+    });
+}
+
+function buyBiz(i){
+    let b = businesses[i];
+    if(money < b.price) return alert("Недостаточно денег!");
+    money -= b.price;
+    income += b.income;
+    bizOwned.push(b.name);
+    save();
+    updateAll();
+}
+
+/* =============== МАШИНЫ ================= */
+function renderCars(){
+    let box = document.getElementById("carList");
+    box.innerHTML = "";
+    cars.forEach((c,i)=>{
+        let own = carsOwned.includes(c.name) ? "(куплено)" : "";
+        box.innerHTML += `
+        <div class='item'>
+            <div>
+                <b>${c.name}</b> ${own}<br>
+                Цена: ${c.price}$
+                <button class="btn" onclick="buyCar(${i})">Купить</button>
+            </div>
+            <img src="${c.img}">
+        </div>`;
+    });
+}
+
+function buyCar(i){
+    let c = cars[i];
+    if(carsOwned.includes(c.name)) return alert("Уже куплено!");
+    if(money < c.price) return alert("Недостаточно денег!");
+    money -= c.price;
+    carsOwned.push(c.name);
+    save();
+    updateAll();
+}
+
+/* =============== ДОМА ================= */
+function renderHouses(){
+    let box = document.getElementById("houseList");
+    box.innerHTML = "";
+    houses.forEach((h,i)=>{
+        let own = housesOwned.includes(h.name) ? "(куплено)" : "";
+        box.innerHTML += `
+        <div class='item'>
+            <div>
+                <b>${h.name}</b> ${own}<br>
+                Цена: ${h.price}$
+                <button class="btn" onclick="buyHouse(${i})">Купить</button>
+            </div>
+            <img src="${h.img}">
+        </div>`;
+    });
+}
+
+function buyHouse(i){
+    let h = houses[i];
+    if(housesOwned.includes(h.name)) return alert("Уже куплено!");
+    if(money < h.price) return alert("Недостаточно денег!");
+    money -= h.price;
+    housesOwned.push(h.name);
+    save();
+    updateAll();
+}
+
+/* =============== VIP ================= */
+function buyVIP(){
+    if(vip) return alert("У тебя уже VIP!");
+    if(money < 500000) return alert("Недостаточно денег!");
+    money -= 500000;
+    vip = true;
+    income = Math.floor(income * 1.2);
+    save();
+    updateAll();
+}
+
+/* =============== ЭКРАНЫ ================= */
+function show(s){
+    document.getElementById("screen-business").style.display="none";
+    document.getElementById("screen-cars").style.display="none";
+    document.getElementById("screen-houses").style.display="none";
+    document.getElementById("screen-vip").style.display="none";
+    document.querySelectorAll(".navbar button")
+    .forEach(b=>b.classList.remove("active"));
+
+    if(s==="business"){
+        document.getElementById("screen-business").style.display="block";
+        document.querySelectorAll(".navbar button")[0].classList.add("active");
+    }
+    if(s==="cars"){
+        document.getElementById("screen-cars").style.display="block";
+        document.querySelectorAll(".navbar button")[1].classList.add("active");
+        renderCars();
+    }
+    if(s==="houses"){
+        document.getElementById("screen-houses").style.display="block";
+        document.querySelectorAll(".navbar button")[2].classList.add("active");
+        renderHouses();
+    }
+    if(s==="vip"){
+        document.getElementById("screen-vip").style.display="block";
+        document.querySelectorAll(".navbar button")[3].classList.add("active");
+    }
+}
+
+/* =============== ОБНОВЛЕНИЕ ВСЕГО ================= */
+function updateAll(){
+    updateMoney();
+    renderBusinesses();
+    save();
+}
+
+/* =============== ПАССИВНЫЙ ДОХОД ================= */
+setInterval(()=>{
+    money += income;
+    save();
+    updateMoney();
+},1000);
+
+/* =============== ЗАПУСК ================= */
+updateAll();
+</script>
+
+</body>
+</html>
